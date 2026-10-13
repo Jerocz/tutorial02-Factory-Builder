@@ -32,3 +32,9 @@ python manage.py runserver
 (en PowerShell: `$env:PAYMENT_PROVIDER="MOCK"; python manage.py runserver`)
 
 URLs para probar: `/compra/<id>/` y `/compra-rapida/<id>/`
+
+## Evidencia del Mock
+
+Compra en `/compra/1/` con `PAYMENT_PROVIDER=MOCK`:
+
+![Mock Payment en consola](mock_payment_consola.png)
