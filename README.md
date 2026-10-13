@@ -1,19 +1,14 @@
-# Tutorial 01 - Django SOLID
+# Tutorial 02 - Patrones Creacionales en Django
 
 Arquitectura de Software 2026 - EAFIT
 Jeronimo Carvajal Zuluaga
 
-Evolucion de la funcionalidad "Compra Rapida" desde una vista desordenada (FBV) hasta una vista que solo delega a la capa de servicio.
+Continuacion del Tutorial 01. Se agregan dos patrones creacionales:
 
-## Versiones de la vista
+- **Factory Method** (`tienda_app/infra/factories.py`): `PaymentFactory` decide que procesador de pago usar segun la variable de entorno `PAYMENT_PROVIDER`. Las vistas ya no crean el banco directamente.
+- **Builder** (`tienda_app/domain/builders.py`): `OrdenBuilder` arma la orden paso a paso (usuario, productos, direccion) y valida antes de crearla. Se usa desde `CompraService`.
 
-| Version | URL | Donde esta la logica |
-|---|---|---|
-| FBV spaghetti | `/compra-rapida/fbv/<id>/` | Todo dentro de la funcion |
-| CBV | `/compra-rapida/cbv/<id>/` | En el metodo `post` de la clase |
-| CBV + Service Layer | `/compra-rapida/<id>/` | En `CompraRapidaService` (services.py) |
-
-La version final usa `BancoNacionalProcesador` (infra/gateways.py), que registra cada pago en `pagos_locales_JERONIMO_CARVAJAL.log`.
+Para el Builder se agregaron los campos `usuario` y `direccion_envio` al modelo `Orden` (migracion 0002).
 
 ## Como correrlo
 
@@ -22,15 +17,18 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+```
+
+Modo normal (Banco Nacional, escribe en el .log):
+```
 python manage.py runserver
 ```
 
-Para crear datos de prueba se usa `python manage.py shell`:
-
-```python
-from tienda_app.models import Libro, Inventario
-l = Libro.objects.create(titulo="Clean Code en Python", precio=150.0)
-Inventario.objects.create(libro=l, cantidad=10)
+Modo pruebas (Mock, no cobra y muestra un mensaje en consola):
 ```
+set PAYMENT_PROVIDER=MOCK
+python manage.py runserver
+```
+(en PowerShell: `$env:PAYMENT_PROVIDER="MOCK"; python manage.py runserver`)
 
-Luego entrar a http://127.0.0.1:8000/compra-rapida/1/ y darle "Comprar Ya".
+URLs para probar: `/compra/<id>/` y `/compra-rapida/<id>/`
