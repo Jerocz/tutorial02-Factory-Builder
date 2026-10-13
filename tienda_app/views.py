@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.views import View
 
-from .infra.gateways import BancoNacionalProcesador
+from .infra.factories import PaymentFactory
 from .models import Inventario, Libro, Orden
 from .services import CompraRapidaService, CompraService
 
@@ -16,9 +16,10 @@ class CompraView(View):
     """
     template_name = 'tienda_app/compra.html'
 
-    # Configuramos el servicio con su implementación de infraestructura
     def setup_service(self):
-        gateway = BancoNacionalProcesador()
+        # ANTES: gateway = BancoNacionalProcesador()
+        # AHORA: Delegacion total a la Fabrica
+        gateway = PaymentFactory.get_processor()
         return CompraService(procesador_pago=gateway)
 
     def get(self, request, libro_id):
@@ -106,12 +107,12 @@ class CompraRapidaServiceView(View):
     template_name = 'tienda_app/compra_rapida.html'
 
     def get(self, request, libro_id):
-        servicio = CompraRapidaService(BancoNacionalProcesador())
+        servicio = CompraRapidaService(PaymentFactory.get_processor())
         return render(request, self.template_name, servicio.obtener_detalle(libro_id))
 
     def post(self, request, libro_id):
         try:
-            total = CompraRapidaService(BancoNacionalProcesador()).procesar(libro_id)
+            total = CompraRapidaService(PaymentFactory.get_processor()).procesar(libro_id)
             return render(request, self.template_name, {'mensaje_exito': f"Compra exitosa. Total: ${total}"})
         except ValueError as e:
             return render(request, self.template_name, {'error': str(e)}, status=400)
